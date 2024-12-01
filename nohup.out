@@ -1,0 +1,10 @@
+num_questions received: all
+Type of num_questions: <class 'str'>
+Loaded 100 malicious questions.
+Loaded 100 malicious questions.
+usage: generate.py [-h] --model MODEL [--all_questions {true,false}]
+                   [--num_questions NUM_QUESTIONS] --malicious_file
+                   MALICIOUS_FILE [--step_size STEP_SIZE]
+                   [--output_path OUTPUT_PATH]
+generate.py: error: argument --num_questions: invalid int value: ''
+./bin/lcm_generation.sh: line 28: 27578 Terminated              python ./src/generate.py --model=${model} --num_question=${num_questions} --step_size=${step_size} --all_questions=${all_questions} --dataset_path=${dataset_path} --prompt_key=${prompt_key} --system_prompt=${system_prompt} --output_path=${output_path}

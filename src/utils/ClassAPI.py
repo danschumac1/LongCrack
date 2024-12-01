@@ -9,6 +9,23 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import huggingface_hub
 
+def api_config() -> openai:
+    """
+    Load the OpenAI API key from the environment variables.
+    Returns:
+        openai: The OpenAI API client configured with the API key.
+    """
+    load_dotenv('./resources/.env')
+
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    if api_key is None:
+        raise ValueError("API key is missing. Make sure to set OPENAI_API_KEY in your environment.")
+
+    openai.api_key = api_key
+    return openai
+
+
 class MetaProcessor(metaclass=abc.ABCMeta):
     def __init__(self):
         pass
@@ -42,9 +59,11 @@ class Gpt(MetaProcessor):
         self.client = openai.OpenAI(
             api_key=os.environ.get("OPENAI_API_KEY"),
         )
-    def get_single_completion(self, model:str, user_prompt:str, malicious_uuid:str) -> Union[str, None]:
+    def get_single_completion(
+            self, model:str, user_prompt:str, malicious_uuid:str, system_prompt:str
+            ) -> Union[str, None]:
         params = self.get_params(model)
-        system_prompt = params['system_prompt']
+        # system_prompt = params['system_prompt']
         user_prompt0 = params['user_prompt']
         assistant_prompt = params['assistant_prompt']
         try:
@@ -192,9 +211,9 @@ class DataProcessor:
                 entry = json.loads(line.strip())  # Parse the line into a dictionary
                 self.benign_questions.append({entry['uuid']:entry['question']})
 
-    def load_malicious_questions(self, path_to_jsonl:str, num_questions:Union[str, int]=1):
-        print(f"num_questions received: {num_questions}")
-        print(f"Type of num_questions: {type(num_questions)}")
+    def load_malicious_questions(self, path_to_jsonl:str, prompt_key:str, num_questions:Union[str, int]=1):
+        # print(f"num_questions received: {num_questions}")
+        # print(f"Type of num_questions: {type(num_questions)}")
 
 
         # Load malicious questions and assign the same UUID to all of them
@@ -204,7 +223,7 @@ class DataProcessor:
                 # grab dict
                 entry = json.loads(line.strip())
                 # from dict grab question
-                self.malicious_questions.append({self.malicious_uuid: entry["question"]})
+                self.malicious_questions.append({self.malicious_uuid: entry[prompt_key]})
                 # from dict grab id
                 self.mal_q_ids.append(entry["id"])
                 # count how many questions have been loaded
@@ -212,8 +231,8 @@ class DataProcessor:
                 # quit out after loading the correct number of questions
                 if num_questions != "all" and counter >= num_questions:
                     break
-        print(f"Loaded {counter} malicious questions.")
-        print(f"Loaded {len(self.malicious_questions)} malicious questions.")
+        # print(f"Loaded {counter} malicious questions.")
+        # print(f"Loaded {len(self.malicious_questions)} malicious questions.")
         # print(f"malicious questions loaded: {self.malicious_questions}")
 
     def generate_prompt(self, insertion_position:int, mal_question:dict) -> str:
